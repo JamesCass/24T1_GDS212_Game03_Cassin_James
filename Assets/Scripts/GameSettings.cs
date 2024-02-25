@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -5,6 +6,7 @@ using UnityEngine;
 
 public class GameSettings : MonoBehaviour
 {
+    private readonly Dictionary<EPuzzleThemes, string> puzzleThemeDirectory = new Dictionary<EPuzzleThemes, string>();    
     private int settings;
     private const int SettingsNumber = 2;
 
@@ -12,7 +14,6 @@ public class GameSettings : MonoBehaviour
     public enum EPairNumber
     {
         NotSet = 0,
-        E5Pairs = 5,
         E10Pairs = 10,
         E15Pairs = 15,
         E20Pairs = 20,
@@ -51,10 +52,18 @@ public class GameSettings : MonoBehaviour
 
     private void Start()
     {
+        SetPuzzleThemeDirectory();
         gameSettings = new Settings();
         ResetGameSettings();
 
 
+    }
+
+    private void SetPuzzleThemeDirectory()
+    {
+        puzzleThemeDirectory.Add(EPuzzleThemes.Black, "Black");
+        puzzleThemeDirectory.Add(EPuzzleThemes.Grey, "Grey");
+        puzzleThemeDirectory.Add(EPuzzleThemes.Blue, "Blue");
     }
 
     public void SetPairNumber(EPairNumber Number)
@@ -92,5 +101,28 @@ public class GameSettings : MonoBehaviour
     public bool AllSettingsReady()
     {
         return settings == SettingsNumber;
+    }
+
+    public string GetMaterialDirectoryName()
+    {
+        return "Materials/";
+        
+    }
+
+    public string GetPuzzleThemeTextureDirectoryName()
+    {
+        if (puzzleThemeDirectory.ContainsKey(gameSettings.PuzzleTheme))
+        {
+            return "Tiles/" + puzzleThemeDirectory[gameSettings.PuzzleTheme] + "/";
+        }
+
+        else
+        {
+            Debug.LogError("ERROR: CANNOT GET DIRECTORY NAME");
+            return "";
+        }
+            
+
+        
     }
 }
