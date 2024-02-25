@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 
 public class TileManager : MonoBehaviour
@@ -7,6 +8,19 @@ public class TileManager : MonoBehaviour
     public Tile TilePrefab;
     public Transform TileSpawnPosition;
     public Vector2 StartPosition = new Vector2(-2.15f, 3.62f);
+
+    public enum GameState {NoAction, MovingOnPositions, DeletingPuzzles, FlipBack, Checking, GameEnd};
+
+    public enum PuzzleState { PuzzleRotating, CanRotate};
+
+    public enum RevealedState { NoRevealed, OneRevealed, TwoRevealed };
+
+    [HideInInspector]
+    public GameState CurrentGameState;
+    [HideInInspector]
+    public PuzzleState CurrentPuzzleState;
+    [HideInInspector]
+    public RevealedState PuzzleRevealedNumber;
 
     [HideInInspector]
     public List<Tile> TileList;
@@ -23,29 +37,116 @@ public class TileManager : MonoBehaviour
     private Material firstMaterial;
     private string firstTexturePath;
 
+    private int firstRevealedTile;
+    private int secondRevealedTile;
+    private int revealedTileNumber = 0;
+    private int tileToDestroy1;
+    private int tileToDestroy2;
+
     private void Start()
     {
+        CurrentGameState = GameState.NoAction;
+        CurrentPuzzleState = PuzzleState.CanRotate;
+        PuzzleRevealedNumber = 0;
+        revealedTileNumber = 0;
+        firstRevealedTile = -1;
+        secondRevealedTile = -1;
+
+
         LoadMaterials();
 
 
         if (GameSettings.Instance.GetPairNumber() == GameSettings.EPairNumber.E10Pairs)
         {
+            CurrentGameState = GameState.MovingOnPositions;
             SpawnTileMesh(4, 5, StartPosition, offset, false);
             MoveTile(4, 5, StartPosition, offset);
         }
 
         else if (GameSettings.Instance.GetPairNumber() == GameSettings.EPairNumber.E15Pairs)
         {
+            CurrentGameState = GameState.MovingOnPositions;
             SpawnTileMesh(5, 6, StartPosition, offset, false);
             MoveTile(5, 6, StartPosition, offsetFor15Pairs);
         }
 
         else if (GameSettings.Instance.GetPairNumber() == GameSettings.EPairNumber.E20Pairs)
         {
+            CurrentGameState = GameState.MovingOnPositions;
             SpawnTileMesh(5, 8, StartPosition, offset, true);
             MoveTile(5, 8, StartPosition, offsetFor20Pairs);
         }
 
+    }
+
+    public void CheckTile()
+    {
+        CurrentGameState = GameState.Checking;
+        revealedTileNumber = 0;
+        for (int id = 0; id < TileList.Count; id++)
+        {
+            if (TileList[id].Revealed && revealedTileNumber < 2)
+            {
+                if (revealedTileNumber == 0)
+                {
+                    firstRevealedTile = id;
+                    revealedTileNumber++;
+                }
+
+                else if (revealedTileNumber == 1)
+                {
+                    secondRevealedTile = id;
+                    revealedTileNumber++;
+                }
+            }
+        }
+
+        if (revealedTileNumber == 2)
+        {
+            if (TileList[firstRevealedTile].GetIndex() == TileList[secondRevealedTile].GetIndex() && firstRevealedTile != secondRevealedTile)
+            {
+                CurrentGameState = GameState.DeletingPuzzles;
+                tileToDestroy1 = firstRevealedTile;
+                tileToDestroy2 = secondRevealedTile;
+
+            }
+            else
+            {
+                CurrentGameState = GameState.FlipBack;
+            }
+            
+        }
+
+        CurrentPuzzleState = TileManager.PuzzleState.CanRotate;
+
+        if (CurrentGameState == GameState.Checking)
+        {
+            CurrentGameState = GameState.NoAction;
+        }
+    }
+
+    private void DestroyTile()
+    {
+        PuzzleRevealedNumber = RevealedState.NoRevealed;
+        System.Threading.Thread.Sleep(400);
+        TileList[tileToDestroy1].Deactivate();
+        TileList[tileToDestroy2].Deactivate();
+        revealedTileNumber = 0;
+        CurrentGameState = GameState.NoAction;
+        CurrentPuzzleState = PuzzleState.CanRotate;
+    }
+
+    private void FlipBack()
+    {
+        System.Threading.Thread.Sleep(500);
+        TileList[firstRevealedTile].FlipBack();
+        TileList[secondRevealedTile].FlipBack();
+
+        TileList[firstRevealedTile].Revealed = false;
+        TileList[secondRevealedTile].Revealed = false;
+
+        PuzzleRevealedNumber = RevealedState.NoRevealed;
+        CurrentGameState = GameState.NoAction;
     }
 
     private void LoadMaterials()
@@ -72,7 +173,20 @@ public class TileManager : MonoBehaviour
 
     private void Update()
     {
-
+        if (CurrentGameState == GameState.DeletingPuzzles)
+        {
+            if (CurrentPuzzleState == PuzzleState.CanRotate)
+            {
+                DestroyTile();
+            }
+        }
+        if (CurrentGameState == GameState.FlipBack)
+        {
+            if (CurrentPuzzleState == PuzzleState.CanRotate)
+            {
+                FlipBack();
+            }
+        }
     }
 
     private void SpawnTileMesh(int rows, int columns, Vector2 Pos, Vector2 offset, bool scaleDown)
@@ -99,7 +213,7 @@ public class TileManager : MonoBehaviour
 
     public void ApplyTextures()
     {
-        var randomMaterialIndex = Random.Range(0, TileList.Count);
+        var randomMaterialIndex = Random.Range(0, materialList.Count);
         var AppliedTimes = new int[materialList.Count];
 
         for (int i = 0; i < materialList.Count; i++)
@@ -136,6 +250,8 @@ public class TileManager : MonoBehaviour
             o.SetFirstMaterial(firstMaterial, firstTexturePath);
             o.ApplyFirstMaterial();
             o.SetSecondMaterial(materialList[randomMaterialIndex], texturePathList[randomMaterialIndex]);
+            o.SetIntex(randomMaterialIndex);
+            o.Revealed = false;
             AppliedTimes[randomMaterialIndex] += 1;
             forceMat = false;
         }

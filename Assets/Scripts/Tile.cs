@@ -11,9 +11,22 @@ public class Tile : MonoBehaviour
     private Material secondMaterial;
 
     private Quaternion currentRotation;
+
+    [HideInInspector]
+    public bool Revealed = false;
+    private TileManager tileManager;
+    private bool clicked = false;
+    private int index;
+
+    public void SetIntex(int id) { index = id; }
+    public int GetIndex() { return index; }
+
     // Start is called before the first frame update
     void Start()
     {
+        Revealed = false;
+        clicked = false;
+        tileManager = GameObject.Find("[TileManager]").GetComponent<TileManager>();
         currentRotation = gameObject.transform.rotation;
     }
 
@@ -25,7 +38,23 @@ public class Tile : MonoBehaviour
 
     public void OnMouseDown()
     {
-        StartCoroutine(LoopRotation(45, false));
+        if (clicked == false)
+        {
+            tileManager.CurrentPuzzleState = TileManager.PuzzleState.PuzzleRotating;
+            StartCoroutine(LoopRotation(45, false));
+            clicked = true;
+        }
+        
+    }
+
+    public void FlipBack()
+    {
+        if (gameObject.activeSelf)
+        {
+            tileManager.CurrentPuzzleState = TileManager.PuzzleState.PuzzleRotating;
+            Revealed = false;
+            StartCoroutine(LoopRotation(90, true));
+        }
     }
 
     IEnumerator LoopRotation(float angle, bool FirstMat)
@@ -69,8 +98,18 @@ public class Tile : MonoBehaviour
 
         if(!FirstMat)
         {
+            Revealed = true;
             ApplySecondMaterial();
+            tileManager.CheckTile();
         }
+
+        else
+        {
+            tileManager.PuzzleRevealedNumber = TileManager.RevealedState.NoRevealed;
+            tileManager.CurrentPuzzleState = TileManager.PuzzleState.CanRotate;
+        }
+
+        clicked = false;
     }
 
     public void SetFirstMaterial(Material mat, string texturePath)
@@ -93,5 +132,10 @@ public class Tile : MonoBehaviour
     public void ApplySecondMaterial()
     {
         gameObject.GetComponent<Renderer>().material = secondMaterial;
+    }
+
+    public void Deactivate()
+    {
+        gameObject.SetActive(false);
     }
 }
