@@ -2,12 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TileManager : MonoBehaviour
 {
     public Tile TilePrefab;
     public Transform TileSpawnPosition;
     public Vector2 StartPosition = new Vector2(-2.15f, 3.62f);
+
+    [Space]
+    [Header("EndGameScreen")]
+    public GameObject EndGamePanel;
+    public GameObject NewBestTimeText;
+    public GameObject YourTimeText;
+    public GameObject EndTimeText;
 
     public enum GameState {NoAction, MovingOnPositions, DeletingPuzzles, FlipBack, Checking, GameEnd};
 
@@ -43,6 +51,14 @@ public class TileManager : MonoBehaviour
     private int tileToDestroy1;
     private int tileToDestroy2;
 
+
+    private bool coroutineStarted = false;
+
+    private int pairNumbers;
+    private int removedPairs;
+    private Timer gameTimer;
+
+
     private void Start()
     {
         CurrentGameState = GameState.NoAction;
@@ -52,6 +68,10 @@ public class TileManager : MonoBehaviour
         firstRevealedTile = -1;
         secondRevealedTile = -1;
 
+        removedPairs = 0;
+        pairNumbers = (int) GameSettings.Instance.GetPairNumber();
+
+        gameTimer = GameObject.Find("Main Camera").GetComponent<Timer>();
 
         LoadMaterials();
 
@@ -128,17 +148,20 @@ public class TileManager : MonoBehaviour
     private void DestroyTile()
     {
         PuzzleRevealedNumber = RevealedState.NoRevealed;
-        System.Threading.Thread.Sleep(400);
         TileList[tileToDestroy1].Deactivate();
         TileList[tileToDestroy2].Deactivate();
         revealedTileNumber = 0;
+        removedPairs++;
         CurrentGameState = GameState.NoAction;
         CurrentPuzzleState = PuzzleState.CanRotate;
     }
 
-    private void FlipBack()
+    private IEnumerator FlipBack()
     {
-        System.Threading.Thread.Sleep(500);
+        coroutineStarted = true;
+
+        yield return new WaitForSeconds(0.5f);
+
         TileList[firstRevealedTile].FlipBack();
         TileList[secondRevealedTile].FlipBack();
 
@@ -147,6 +170,8 @@ public class TileManager : MonoBehaviour
 
         PuzzleRevealedNumber = RevealedState.NoRevealed;
         CurrentGameState = GameState.NoAction;
+
+        coroutineStarted = false;
     }
 
     private void LoadMaterials()
@@ -178,15 +203,60 @@ public class TileManager : MonoBehaviour
             if (CurrentPuzzleState == PuzzleState.CanRotate)
             {
                 DestroyTile();
+                CheckGameEnd();
             }
         }
         if (CurrentGameState == GameState.FlipBack)
         {
-            if (CurrentPuzzleState == PuzzleState.CanRotate)
+            if (CurrentPuzzleState == PuzzleState.CanRotate && coroutineStarted == false)
             {
-                FlipBack();
+                StartCoroutine(FlipBack());
             }
         }
+
+        if (CurrentGameState == GameState.GameEnd)
+        {
+            if (TileList[firstRevealedTile].gameObject.activeSelf == false && TileList[secondRevealedTile].gameObject.activeSelf == false && EndGamePanel.activeSelf == false)
+            {
+                ShowEndGameInformation();
+            }
+        }
+    }
+
+    private bool CheckGameEnd()
+    {
+        if (removedPairs == pairNumbers && CurrentGameState != GameState.GameEnd)
+        {
+            CurrentGameState = GameState.GameEnd;
+            gameTimer.StopTimer();
+            Config.PlaceScoreOnBoard(gameTimer.GetCurrentTime());
+
+        }
+
+        return(CurrentGameState == GameState.GameEnd);
+    }
+
+    private void ShowEndGameInformation()
+    {
+        EndGamePanel.SetActive(true);
+
+        if(Config.IsBestScore())
+        {
+            NewBestTimeText.SetActive(true);
+            YourTimeText.SetActive(false);
+        }
+        else
+        {
+            NewBestTimeText.SetActive(false);
+            YourTimeText.SetActive(true);
+        }
+
+
+        var timer = gameTimer.GetCurrentTime();
+        var minutes = Mathf.Floor(timer /  60); 
+        var seconds = Mathf.RoundToInt(timer % 60);
+        var newText = minutes.ToString("00") + ":" + seconds.ToString("00");
+        EndTimeText.GetComponent<Text>().text = newText;
     }
 
     private void SpawnTileMesh(int rows, int columns, Vector2 Pos, Vector2 offset, bool scaleDown)

@@ -153,6 +153,14 @@ public class Tile : MonoBehaviour
 
     public void Deactivate()
     {
+        StartCoroutine(DeactivateCoroutine());
+    }
+
+    private IEnumerator DeactivateCoroutine()
+    {
+        Revealed = false;
+
+        yield return new WaitForSeconds(1f);
         gameObject.SetActive(false);
     }
 }
