@@ -7,6 +7,8 @@ using UnityEngine;
 
 public class Tile : MonoBehaviour
 {
+    public AudioClip pressSound;
+
     private Material firstMaterial;
     private Material secondMaterial;
 
@@ -18,6 +20,8 @@ public class Tile : MonoBehaviour
     private bool clicked = false;
     private int index;
 
+    private AudioSource audio;
+
     public void SetIntex(int id) { index = id; }
     public int GetIndex() { return index; }
 
@@ -28,6 +32,9 @@ public class Tile : MonoBehaviour
         clicked = false;
         tileManager = GameObject.Find("[TileManager]").GetComponent<TileManager>();
         currentRotation = gameObject.transform.rotation;
+
+        audio = GetComponent<AudioSource>();
+        audio.clip = pressSound;
     }
 
     // Update is called once per frame
@@ -41,8 +48,14 @@ public class Tile : MonoBehaviour
         if (clicked == false)
         {
             tileManager.CurrentPuzzleState = TileManager.PuzzleState.PuzzleRotating;
+            if (GameSettings.Instance.IsAudioMutedPermanently() == false)
+            {
+                audio.Play();
+            }
             StartCoroutine(LoopRotation(45, false));
             clicked = true;
+
+           
         }
         
     }
@@ -53,6 +66,10 @@ public class Tile : MonoBehaviour
         {
             tileManager.CurrentPuzzleState = TileManager.PuzzleState.PuzzleRotating;
             Revealed = false;
+            if (GameSettings.Instance.IsAudioMutedPermanently() == false)
+            {
+                audio.Play();
+            }
             StartCoroutine(LoopRotation(90, true));
         }
     }

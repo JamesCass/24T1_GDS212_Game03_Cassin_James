@@ -9,7 +9,7 @@ public class GameSettings : MonoBehaviour
     private readonly Dictionary<EPuzzleThemes, string> puzzleThemeDirectory = new Dictionary<EPuzzleThemes, string>();    
     private int settings;
     private const int SettingsNumber = 2;
-
+    private bool muteAudioPermanently = false; 
 
     public enum EPairNumber
     {
@@ -124,5 +124,16 @@ public class GameSettings : MonoBehaviour
             
 
         
+    }
+
+
+    public void MuteAudioPermanently(bool muted )
+    {
+        muteAudioPermanently = muted;
+    }
+
+    public bool IsAudioMutedPermanently()
+    {
+        return muteAudioPermanently;
     }
 }
