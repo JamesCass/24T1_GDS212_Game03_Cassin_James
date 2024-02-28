@@ -1,8 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Xml.Xsl;
-using Unity.PlasticSCM.Editor.WebApi;
-using UnityEditor.Build.Reporting;
 using UnityEngine;
 
 public class Tile : MonoBehaviour
