@@ -52,7 +52,7 @@ public class Tile : MonoBehaviour
             {
                 audio.Play();
             }
-            StartCoroutine(LoopRotation(45, false));
+            StartCoroutine(LoopRotation(5, false));
             clicked = true;
 
            
@@ -78,7 +78,6 @@ public class Tile : MonoBehaviour
     {
         var rot = 0f;
         const float dir = 1f;
-        const float rotSpeed = 180.0f;
         const float rotSpeed1 = 180.0f;
         var startAngle = angle;
         var assigned = false;
@@ -88,7 +87,7 @@ public class Tile : MonoBehaviour
         {
             while (rot < angle)
             {
-                var step = Time.deltaTime * rotSpeed1;
+                var step = Time.fixedDeltaTime * rotSpeed1;
                 gameObject.GetComponent<Transform>().Rotate(new Vector3(0, 2, 0) * step * dir);
                 if(rot >= (startAngle - 2) && assigned == false)
                 {
