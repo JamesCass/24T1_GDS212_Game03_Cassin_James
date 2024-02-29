@@ -70,7 +70,7 @@ public class Tile : MonoBehaviour
             {
                 audio.Play();
             }
-            StartCoroutine(LoopRotation(45, true));
+            StartCoroutine(LoopRotation(10, true));
         }
     }
 
