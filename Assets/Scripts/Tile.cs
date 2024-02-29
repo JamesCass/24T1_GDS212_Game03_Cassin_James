@@ -72,6 +72,7 @@ public class Tile : MonoBehaviour
             }
             StartCoroutine(LoopRotation(10, true));
         }
+        Handheld.Vibrate();
     }
 
     IEnumerator LoopRotation(float angle, bool FirstMat)
