@@ -16,6 +16,8 @@ public class Tile : MonoBehaviour
     private bool clicked = false;
     private int index;
 
+    private bool isRotating = false;   
+
     private AudioSource audio;
 
     public void SetIntex(int id) { index = id; }
@@ -41,8 +43,10 @@ public class Tile : MonoBehaviour
 
     public void OnMouseDown()
     {
-        if (clicked == false)
+        if (clicked == false && !isRotating)
         {
+            StopAllCoroutines();
+            isRotating = true;
             tileManager.CurrentPuzzleState = TileManager.PuzzleState.PuzzleRotating;
             if (GameSettings.Instance.IsAudioMutedPermanently() == false)
             {
@@ -75,7 +79,7 @@ public class Tile : MonoBehaviour
         var rot = 0f;
         const float dir = 1f;
         const float rotSpeed = 180.0f;
-        const float rotSpeed1 = 90.0f;
+        const float rotSpeed1 = 180.0f;
         var startAngle = angle;
         var assigned = false;
 
@@ -105,6 +109,9 @@ public class Tile : MonoBehaviour
                 angle -= (1 * step * dir);
                 yield return null;
             }
+            clicked = false;
+            isRotating = false;
+            yield return null;
         }
 
         gameObject.GetComponent<Transform>().rotation = currentRotation;
