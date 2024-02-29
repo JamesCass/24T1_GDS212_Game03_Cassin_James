@@ -156,6 +156,7 @@ public class TileManager : MonoBehaviour
         removedPairs++;
         CurrentGameState = GameState.NoAction;
         CurrentPuzzleState = PuzzleState.CanRotate;
+        Handheld.Vibrate();
     }
 
     private IEnumerator FlipBack()
