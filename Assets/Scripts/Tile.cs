@@ -123,6 +123,7 @@ public class Tile : MonoBehaviour
         }
 
         clicked = false;
+        yield return null;
     }
 
     public void SetFirstMaterial(Material mat, string texturePath)

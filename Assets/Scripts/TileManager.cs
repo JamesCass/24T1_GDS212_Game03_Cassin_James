@@ -174,6 +174,7 @@ public class TileManager : MonoBehaviour
         CurrentGameState = GameState.NoAction;
 
         coroutineStarted = false;
+        yield return null;
     }
 
     private void LoadMaterials()
