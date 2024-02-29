@@ -52,7 +52,7 @@ public class Tile : MonoBehaviour
             {
                 audio.Play();
             }
-            StartCoroutine(LoopRotation(5, false));
+            StartCoroutine(LoopRotation(45, false));
             clicked = true;
 
            
@@ -70,7 +70,7 @@ public class Tile : MonoBehaviour
             {
                 audio.Play();
             }
-            StartCoroutine(LoopRotation(90, true));
+            StartCoroutine(LoopRotation(45, true));
         }
     }
 
